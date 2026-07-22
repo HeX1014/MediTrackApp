@@ -4,7 +4,7 @@ const session = require('express-session');
 const flash = require('connect-flash');
 
 const app = express();
-
+ 
 // Create MySQL connection
 const db = mysql.createConnection({
     host: 'localhost',
