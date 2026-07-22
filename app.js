@@ -14,7 +14,7 @@ const db = mysql.createConnection({
     ssl: {
         rejectUnauthorized: false
     }
-});
+}); 
 
 db.connect((err) => {
     if (err) {
