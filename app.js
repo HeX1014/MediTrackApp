@@ -774,7 +774,7 @@ app.get('/editAppointment/:id', (req, res) => {
     const appointmentId = req.params.id;
     const sql = 'SELECT * FROM appointments WHERE appointmentId = ?';
 
-    connection.query(sql, [appointmentId], (error, results) => {
+    db.query(sql, [appointmentId], (error, results) => {
         if (error) {
             console.error('Database query error:', error.message);
             return res.send('Error retrieving appointment by ID');
