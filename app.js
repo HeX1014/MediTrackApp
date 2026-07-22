@@ -799,7 +799,7 @@ app.post('/editAppointment/:id', (req, res) => {
         WHERE appointmentId = ?
     `;
 
-    connection.query(sql, [clinicHospital, preferredDoctor, appointmentDate, appointmentTime, additionalNotes, appointmentId], (error) => {
+    db.query(sql, [clinicHospital, preferredDoctor, appointmentDate, appointmentTime, additionalNotes, appointmentId], (error) => {
         if (error) {
             console.error('Database update error:', error.message);
             return res.send('Error updating appointment');
@@ -815,7 +815,7 @@ app.get('/patient/editMedication/:id', (req, res) => {
     const medicationId = req.params.id;
     const sql = 'SELECT * FROM medications WHERE medicationId = ?';
 
-    connection.query(sql, [medicationId], (error, results) => {
+    db.query(sql, [medicationId], (error, results) => {
         if (error) {
             console.error('Database query error:', error.message);
             return res.send('Error retrieving medication by ID');
@@ -840,7 +840,7 @@ app.post('/patient/editMedication/:id', (req, res) => {
         WHERE medicationId = ?
     `;
 
-    connection.query(sql, [medicationName, dosage, frequency, startDate, endDate, notes, medicationId], (error) => {
+    db.query(sql, [medicationName, dosage, frequency, startDate, endDate, notes, medicationId], (error) => {
         if (error) {
             console.error('Database update error:', error.message);
             return res.send('Error updating medication');
@@ -856,7 +856,7 @@ app.get('/staff/editMedication/:id', (req, res) => {
     const medicationId = req.params.id;
     const sql = 'SELECT * FROM medications WHERE medicationId = ?';
 
-    connection.query(sql, [medicationId], (error, results) => {
+    db.query(sql, [medicationId], (error, results) => {
         if (error) {
             console.error('Database query error:', error.message);
             return res.send('Error retrieving medication by ID');
@@ -881,7 +881,7 @@ app.post('/staff/editMedication/:id', (req, res) => {
         WHERE medicationId = ?
     `;
 
-    connection.query(sql, [medicationName, dosage, frequency, startDate, endDate, notes, medicationId], (error) => {
+    db.query(sql, [medicationName, dosage, frequency, startDate, endDate, notes, medicationId], (error) => {
         if (error) {
             console.error('Database update error:', error.message);
             return res.send('Error updating medication');
