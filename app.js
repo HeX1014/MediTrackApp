@@ -769,6 +769,128 @@ app.get(
     }
 );
 
+// Edit Your Appointments
+app.get('/editAppointment/:id', (req, res) => {
+    const appointmentId = req.params.id;
+    const sql = 'SELECT * FROM appointments WHERE appointmentId = ?';
+
+    connection.query(sql, [appointmentId], (error, results) => {
+        if (error) {
+            console.error('Database query error:', error.message);
+            return res.send('Error retrieving appointment by ID');
+        }
+
+        if (results.length > 0) {
+            res.render('editAppointment', { appointment: results[0] });
+        } else {
+            res.send('Appointment not found');
+        }
+    });
+});
+
+// Send the updated Information to the server
+app.post('/editAppointment/:id', (req, res) => {
+    const appointmentId = req.params.id;
+    const { clinicHospital, preferredDoctor, appointmentDate, appointmentTime, additionalNotes } = req.body;
+
+    const sql = `
+        UPDATE appointments
+        SET clinicHospital = ?, preferredDoctor = ?, appointmentDate = ?, appointmentTime = ?, additionalNotes = ?
+        WHERE appointmentId = ?
+    `;
+
+    connection.query(sql, [clinicHospital, preferredDoctor, appointmentDate, appointmentTime, additionalNotes, appointmentId], (error) => {
+        if (error) {
+            console.error('Database update error:', error.message);
+            return res.send('Error updating appointment');
+        }
+
+        req.flash('success', 'Appointment updated successfully!');
+        res.redirect('/appointments');
+    });
+});
+
+//Edit Medications
+app.get('/patient/editMedication/:id', (req, res) => {
+    const medicationId = req.params.id;
+    const sql = 'SELECT * FROM medications WHERE medicationId = ?';
+
+    connection.query(sql, [medicationId], (error, results) => {
+        if (error) {
+            console.error('Database query error:', error.message);
+            return res.send('Error retrieving medication by ID');
+        }
+
+        if (results.length > 0) {
+            res.render('patientEditMedication', { medication: results[0] });
+        } else {
+            res.send('Medication not found');
+        }
+    });
+});
+
+// Send updated information to the server
+app.post('/patient/editMedication/:id', (req, res) => {
+    const medicationId = req.params.id;
+    const { medicationName, dosage, frequency, startDate, endDate, notes } = req.body;
+
+    const sql = `
+        UPDATE medications
+        SET medicationName = ?, dosage = ?, frequency = ?, startDate = ?, endDate = ?, notes = ?
+        WHERE medicationId = ?
+    `;
+
+    connection.query(sql, [medicationName, dosage, frequency, startDate, endDate, notes, medicationId], (error) => {
+        if (error) {
+            console.error('Database update error:', error.message);
+            return res.send('Error updating medication');
+        }
+
+        req.flash('success', 'Medication updated successfully!');
+        res.redirect('/medications');
+    });
+});
+
+// Edit medication for pharmacy staff
+app.get('/staff/editMedication/:id', (req, res) => {
+    const medicationId = req.params.id;
+    const sql = 'SELECT * FROM medications WHERE medicationId = ?';
+
+    connection.query(sql, [medicationId], (error, results) => {
+        if (error) {
+            console.error('Database query error:', error.message);
+            return res.send('Error retrieving medication by ID');
+        }
+
+        if (results.length > 0) {
+            res.render('staffEditMedication', { medication: results[0] });
+        } else {
+            res.send('Medication not found');
+        }
+    });
+});
+
+// Send updated information to the server for pharmacy staff
+app.post('/staff/editMedication/:id', (req, res) => {
+    const medicationId = req.params.id;
+    const { medicationName, dosage, frequency, startDate, endDate, notes } = req.body;
+
+    const sql = `
+        UPDATE medications
+        SET medicationName = ?, dosage = ?, frequency = ?, startDate = ?, endDate = ?, notes = ?
+        WHERE medicationId = ?
+    `;
+
+    connection.query(sql, [medicationName, dosage, frequency, startDate, endDate, notes, medicationId], (error) => {
+        if (error) {
+            console.error('Database update error:', error.message);
+            return res.send('Error updating medication');
+        }
+
+        req.flash('success', 'Medication updated successfully!');
+        res.redirect('/medications');
+    });
+});
 const PORT = process.env.PORT || 3000;
 
 app.listen(PORT, () => {
