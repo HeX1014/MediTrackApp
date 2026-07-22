@@ -22,7 +22,7 @@
 
         <hr>
 
-        <% if (messages && messages.length> 0) { %>
+        <% if (messages && messages.length > 0) { %>
 
             <div class="alert alert-success">
 
@@ -32,100 +32,102 @@
                         <%= message %>
                     </p>
 
-                    <% }); %>
+                <% }); %>
 
             </div>
 
-            <% } %>
+        <% } %>
 
 
-                <% if (errors && errors.length> 0) { %>
+        <% if (errors && errors.length > 0) { %>
 
-                    <div class="alert alert-danger">
+            <div class="alert alert-danger">
 
-                        <% errors.forEach(function(error) { %>
+                <% errors.forEach(function(error) { %>
 
-                            <p class="mb-0">
-                                <%= error %>
-                            </p>
+                    <p class="mb-0">
+                        <%= error %>
+                    </p>
 
-                            <% }); %>
+                <% }); %>
 
-                    </div>
+            </div>
+
+        <% } %>
+
+
+        <% if (appointments.length === 0) { %>
+
+            <div class="alert alert-info">
+                You currently have no appointments.
+            </div>
+
+        <% } else { %>
+
+            <table class="table table-bordered table-hover">
+
+                <thead class="table-light">
+
+                    <tr>
+                        <th>Hospital / Clinic</th>
+                        <th>Preferred Doctor</th>
+                        <th>Appointment Date</th>
+                        <th>Appointment Time</th>
+                        <th>Reason / Notes</th>
+                        <th>Actions</th> </tr>
+
+                </thead>
+
+                <tbody>
+
+                    <% for (let i = 0; i < appointments.length; i++) { %>
+
+                        <tr>
+
+                            <td>
+                                <%= appointments[i].clinicHospital %>
+                            </td>
+
+                            <td>
+                                <%= appointments[i].preferredDoctor %>
+                            </td>
+
+                            <td>
+                                <%= appointments[i].appointmentDate %>
+                            </td>
+
+                            <td>
+                                <%= appointments[i].appointmentTime %>
+                            </td>
+
+                            <td>
+                                <%= appointments[i].additionalNotes %>
+                            </td>
+
+                            <td>
+                                <a href="/editAppointment/<%= appointments[i].appointmentId %>" class="btn btn-warning">
+                                    Edit Appointment
+                                </a>
+                            </td>
+
+                        </tr>
 
                     <% } %>
 
+                </tbody>
 
-                        <% if (appointments.length===0) { %>
+            </table>
 
-                            <div class="alert alert-info">
-                                You currently have no appointments.
-                            </div>
-
-                            <% } else { %>
-
-                                <table class="table table-bordered table-hover">
-
-                                    <thead class="table-light">
-
-                                        <tr>
-                                            <th>Hospital / Clinic</th>
-                                            <th>Preferred Doctor</th>
-                                            <th>Appointment Date</th>
-                                            <th>Appointment Time</th>
-                                            <th>Reason / Notes</th>
-                                        </tr>
-
-                                    </thead>
-
-                                    <tbody>
-
-                                        <% for (let i=0; i < appointments.length; i++) { %>
-
-                                            <tr>
-
-                                                <td>
-                                                    <%= appointments[i].clinicHospital %>
-                                                </td>
-
-                                                <td>
-                                                    <%= appointments[i].preferredDoctor %>
-                                                </td>
-
-                                                <td>
-                                                    <%= appointments[i].appointmentDate %>
-                                                </td>
-
-                                                <td>
-                                                    <%= appointments[i].appointmentTime %>
-                                                </td>
-
-                                                <td>
-                                                    <%= appointments[i].additionalNotes %>
-                                                </td>
-
-                                            </tr>
-
-                                            <% } %>
-
-                                    </tbody>
-
-                                </table>
-
-                                <% } %>
+        <% } %>
 
 
-                                    <a href="/addAppointment" class="btn btn-primary">
-                                        Book New Appointment
-                                    </a>
+        <a href="/addAppointment" class="btn btn-primary">
+            Book New Appointment
+        </a>
 
-                                    <a href="/editAppointment/<%= appointment.appointmentId %>" class="btn btn-warning">
-                                         Edit Appointment
-                                    </a>
-
-                                    <a href="/dashboard" class="btn btn-secondary">
-                                        Back to Dashboard
-                                    </a>
+        <a href="/dashboard" class="btn btn-secondary">
+            Back to Dashboard
+        </a>
 
     </div>
 

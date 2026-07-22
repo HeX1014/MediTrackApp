@@ -70,8 +70,6 @@
     <% } %>
 
 
-    <!-- Search, filter and organise form -->
-
     <form
         action="/medications"
         method="GET"
@@ -186,7 +184,7 @@
                     <th>Start Date</th>
                     <th>End Date</th>
                     <th>Notes</th>
-                </tr>
+                    <th>Actions</th> </tr>
 
             </thead>
 
@@ -234,6 +232,18 @@
                             <%= medications[i].notes %>
                         </td>
 
+                        <td>
+                            <% if (user.role === 'Patient' || user.role === 'patient') { %>
+                                <a href="/patient/editMedication/<%= medications[i].medicationId %>" class="btn btn-warning">
+                                    Edit Medication
+                                </a>
+                            <% } else { %>
+                                <a href="/staff/editMedication/<%= medications[i].medicationId %>" class="btn btn-warning">
+                                    Edit Medication
+                                </a>
+                            <% } %>
+                        </td>
+
                     </tr>
 
                 <% } %>
@@ -250,10 +260,6 @@
         class="btn btn-success"
     >
         Add Medication
-    </a>
-
-    <a href="/patient/editMedication/<%= medication.medicationId %>" class="btn btn-warning">
-        Edit Medication
     </a>
     
     <a
