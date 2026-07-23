@@ -324,10 +324,24 @@ app.get(
     checkAuthenticated,
     checkAdmin,
     (req, res) => {
-        res.render('admin', {
-            user: req.session.user,
-            messages: req.flash('success'),
-            errors: req.flash('error')
+        const sql = `
+            SELECT id, username, email, role
+            FROM users
+            ORDER BY role, username
+        `;
+
+        db.query(sql, (err, results) => {
+            if (err) {
+                console.log(err);
+                return res.send('Error retrieving user list');
+            }
+
+            res.render('admin', {
+                user: req.session.user,
+                users: results,
+                messages: req.flash('success'),
+                errors: req.flash('error')
+            });
         });
     }
 );
@@ -830,6 +844,7 @@ app.get(
         const sql = `
             SELECT
                 medicationId,
+                userId,
                 medicationName,
                 DATE_FORMAT(expDate, '%Y-%m-%d') AS expDate,
                 notesForStaff,
@@ -1056,6 +1071,162 @@ app.get(
                 });
             }
             );
+        });
+    }
+);
+
+// Delete own medication
+app.post(
+    '/medications/:id/delete',
+    checkAuthenticated,
+    checkPatientOrStaff,
+    (req, res) => {
+        const medicationId = req.params.id;
+        const userId = req.session.user.id;
+
+        const sql = `
+            DELETE FROM medications
+            WHERE medicationId = ?
+            AND userId = ?
+        `;
+
+        db.query(sql, [medicationId, userId], (err, result) => {
+            if (err) {
+                console.log(err);
+                return res.send('Error deleting medication');
+            }
+
+            if (result.affectedRows === 0) {
+                req.flash('error', 'Medication not found, or you do not have permission to delete it.');
+            } else {
+                req.flash('success', 'Medication deleted successfully!');
+            }
+
+            res.redirect('/medications');
+        });
+    }
+);
+
+// Delete own appointment
+app.post(
+    '/appointments/:id/delete',
+    checkAuthenticated,
+    checkPatient,
+    (req, res) => {
+        const appointmentId = req.params.id;
+        const userId = req.session.user.id;
+
+        const sql = `
+            DELETE FROM appointments
+            WHERE appointmentId = ?
+            AND userId = ?
+        `;
+
+        db.query(sql, [appointmentId, userId], (err, result) => {
+            if (err) {
+                console.log(err);
+                return res.send('Error deleting appointment');
+            }
+
+            if (result.affectedRows === 0) {
+                req.flash('error', 'Appointment not found, or you do not have permission to delete it.');
+            } else {
+                req.flash('success', 'Appointment deleted successfully!');
+            }
+
+            res.redirect('/appointments');
+        });
+    }
+);
+
+// Admin deletes a user account
+app.post(
+    '/admin/users/:id/delete',
+    checkAuthenticated,
+    checkAdmin,
+    (req, res) => {
+        const targetUserId = req.params.id;
+
+        if (parseInt(targetUserId) === req.session.user.id) {
+            req.flash('error', 'You cannot delete your own admin account.');
+            return res.redirect('/admin');
+        }
+
+        const sql = `DELETE FROM users WHERE id = ?`;
+
+        db.query(sql, [targetUserId], (err, result) => {
+            if (err) {
+                console.log(err);
+                return res.send('Error deleting user');
+            }
+
+            if (result.affectedRows === 0) {
+                req.flash('error', 'User not found.');
+            } else {
+                req.flash('success', 'User account deleted successfully!');
+            }
+
+            res.redirect('/admin');
+        });
+    }
+);
+
+// My Schedule - personalized combined view
+app.get(
+    '/myschedule',
+    checkAuthenticated,
+    checkPatient,
+    (req, res) => {
+        const userId = req.session.user.id;
+
+        const appointmentsSql = `
+            SELECT
+                appointmentId,
+                clinicHospital,
+                preferredDoctor,
+                DATE_FORMAT(appointmentDate, '%Y-%m-%d') AS appointmentDate,
+                appointmentTime,
+                additionalNotes
+            FROM appointments
+            WHERE userId = ?
+            ORDER BY appointmentDate ASC, appointmentTime ASC
+        `;
+
+        const medicationsSql = `
+            SELECT
+                medicationId,
+                medicationName,
+                dosage,
+                frequency,
+                DATE_FORMAT(startDate, '%Y-%m-%d') AS startDate,
+                DATE_FORMAT(endDate, '%Y-%m-%d') AS endDate,
+                notes
+            FROM medications
+            WHERE userId = ?
+            AND medicationType = 'Personal'
+            ORDER BY startDate DESC
+        `;
+
+        db.query(appointmentsSql, [userId], (err, appointmentResults) => {
+            if (err) {
+                console.log(err);
+                return res.send('Error retrieving your schedule');
+            }
+
+            db.query(medicationsSql, [userId], (err2, medicationResults) => {
+                if (err2) {
+                    console.log(err2);
+                    return res.send('Error retrieving your schedule');
+                }
+
+                res.render('myschedule', {
+                    user: req.session.user,
+                    appointments: appointmentResults,
+                    medications: medicationResults,
+                    messages: req.flash('success'),
+                    errors: req.flash('error')
+                });
+            });
         });
     }
 );
