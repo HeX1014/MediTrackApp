@@ -754,7 +754,9 @@ app.get(
 
         const sql = `
             SELECT
+                medication_for_patient.medication_for_patientId,
                 medication_for_patient.medicationId AS medicationId,
+                medication_for_patient.id AS userId,
                 medicationName,
                 dosage,
                 frequency,
@@ -916,8 +918,8 @@ app.post('/editAppointment/:id', (req, res) => {
 
 //Edit Medications
 app.get('/patient/editMedication/:id', (req, res) => {
-    const medicationId = req.params.id;
-    const sql = 'SELECT * FROM medication_for_patient WHERE medicationId = ?';
+    const medication_for_patientId = req.params.id;
+    const sql = 'SELECT * FROM medication_for_patient WHERE medication_for_patientId = ?';
 
     let medicationList = []; // Initialize an empty array to store medications
 
@@ -931,7 +933,7 @@ app.get('/patient/editMedication/:id', (req, res) => {
     })
 
 
-    db.query(sql, [medicationId], (error, results) => {
+    db.query(sql, [medication_for_patientId], (error, results) => {
         if (error) {
             console.error('Database query error:', error.message);
             return res.send('Error retrieving medication by ID');
@@ -1061,6 +1063,7 @@ app.get(
     }
 );
 
+const PORT = process.env.PORT || 3000;
 
 app.listen(PORT, () => {
     console.log(
