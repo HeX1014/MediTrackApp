@@ -822,7 +822,7 @@ app.get('/patient/editMedication/:id', (req, res) => {
         }
 
         if (results.length > 0) {
-            res.render('patientEditMedication', { medication: results[0] });
+            res.render('EditMedication', { medication: results[0] });
         } else {
             res.send('Medication not found');
         }
