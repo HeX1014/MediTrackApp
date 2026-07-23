@@ -242,12 +242,22 @@
                                     Edit Medication
                                 </a>
                             <% } %>
+
+                            <% if (medications[i].userId === user.id) { %>
+                                <form
+                                action="/medications/<%= medications[i].medicationId %>/delete"
+                                method="POST"
+                                class="d-inline"
+                                onsubmit="return confirm('Are you sure you want to delete this medication? This cannot be undone.');"
+                                >
+                                <button type="submit" class="btn btn-danger">
+                                    Delete
+                                </button>
+                            </form>
+                            <% } %>
                         </td>
 
                     </tr>
-
-                <% } %>
-
             </tbody>
 
         </table>
