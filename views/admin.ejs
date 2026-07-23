@@ -69,6 +69,49 @@
                             Logout
                         </a>
 
+                        <hr>
+                        <h4>Manage Users</h4>
+                        
+                        <p>Remove patient or pharmacy staff accounts from the system.</p>
+                        
+                        <% if (users.length === 0) { %>
+                            <div class="alert alert-info">No users found.</div>
+                        <% } else { %>
+                            <table class="table table-bordered table-hover">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th>Username</th>
+                                        <th>Email</th>
+                                        <th>Role</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <% for (let i = 0; i < users.length; i++) { %>
+                                        <tr>
+                                            <td><%= users[i].username %></td>
+                                            <td><%= users[i].email %></td>
+                                            <td><%= users[i].role %></td>
+                                            <td>
+                                                <% if (users[i].id === user.id) { %>
+                                                    <span class="text-muted">(You)</span>
+                                                    <% } else { %>
+                                                        <form
+                                                        action="/admin/users/<%= users[i].id %>/delete"
+                                                        method="POST"
+                                                        class="d-inline"
+                                                        onsubmit="return confirm('Are you sure you want to permanently delete this user account? This cannot be undone.');"
+                                                        >
+                                                        <button type="submit" class="btn btn-danger">Delete</button>
+                                                    </form>
+                                                    <% } %>
+                                                </td>
+                                            </tr>
+                                            <% } %>
+                                        </tbody>
+                                    </table>
+                                    <% } %>
+
     </div>
 
 </body>
