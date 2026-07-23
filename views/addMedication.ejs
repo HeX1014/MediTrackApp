@@ -16,14 +16,13 @@
         <hr>
 
         <form action="/addMedication" method="POST">
-            <div class="mb-3">
 
-                <label class="form-label">
-                    Medication Name *
-                </label>
-                <input type="text" name="medicationName" class="form-control" placeholder="Enter medication name"
-                    required>
-            </div>
+            <select name="medicationId" class="form-select mb-3" required>
+                <option value="">Select Medication</option>
+                <% medications.forEach(medication => { %>
+                    <option value="<%= medication.medicationId %>"><%= medication.medicationName %></option>
+                <% }); %>
+            </select>
 
             <div class="mb-3">
 
@@ -56,6 +55,14 @@
                     End Date 
                 </label>
                 <input type="date" name="endDate" class="form-control">
+            </div>
+
+            <div class="mb-3">
+
+                <label class="form-label">
+                    Notes 
+                </label>
+                <textarea name="notes" class="form-control" placeholder="Enter any notes"></textarea>
             </div>
 
             <button type="submit" class="btn btn-primary">

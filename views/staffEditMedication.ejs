@@ -51,32 +51,26 @@
                 </div>
 
                 <div class="mb-3">
-                  <label for="dosage" class="form-label">Dosage</label>
-                  <input type="text" class="form-control" id="dosage" name="dosage" 
-                    value="<%= medication.dosage %>" required>
+                  <label for="expDate" class="form-label">Expiry Date</label>
+                  <input type="date" class="form-control" id="expDate" name="expDate" 
+                    value="<%= medication.expDate %>" required>
                 </div>
 
                 <div class="mb-3">
-                  <label for="frequency" class="form-label">Frequency</label>
-                  <input type="text" class="form-control" id="frequency" name="frequency" 
-                    value="<%= medication.frequency %>" required>
+                  <label for="medicationType" class="form-label">Medication Type</label>
+                  <input type="text" class="form-control" id="medicationType" name="medicationType" 
+                    value="<%= medication.medicationType %>" required>  
                 </div>
 
                 <div class="mb-3">
-                  <label for="endDate" class="form-label">Expiry Date</label>
-                  <input type="date" class="form-control" id="endDate" name="endDate" 
-                    value="<%= medication.endDate %>" required>
-                </div>
-
-                <div class="mb-3">
-                  <label for="notes" class="form-label">Notes</label>
-                  <input type="text" class="form-control" id="notes" name="notes" 
-                    value="<%= medication.notes %>">
+                  <label for="notesForStaff" class="form-label">Staff Notes</label>
+                  <input type="text" class="form-control" id="notesForStaff" name="notesForStaff" 
+                    value="<%= medication.notesForStaff %>">
                 </div>
 
                 <div class="d-grid gap-2">
                   <button type="submit" class="btn btn-warning">Update Medication</button>
-                  <a href="/medications" class="btn btn-secondary">Cancel</a>
+                  <a href="/staffMedications" class="btn btn-secondary">Cancel</a>
                 </div>
 
               </form>
@@ -87,7 +81,7 @@
 
           <div class="alert alert-warning text-center">
             <h5>No medication found.</h5>
-            <a href="/medications" class="btn btn-secondary mt-3">Back to Medications</a>
+            <a href="/staffMedications" class="btn btn-secondary mt-3">Back to Medications</a>
           </div>
 
         <% } %>

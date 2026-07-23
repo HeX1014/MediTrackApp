@@ -34,7 +34,7 @@
     <div class="row justify-content-center">
       <div class="col-md-6">
 
-        <% if (medication) { %>
+        <% if (medication_for_patient) { %>
 
           <div class="card shadow">
             <div class="card-header bg-secondary text-white">
@@ -42,42 +42,44 @@
             </div>
 
             <div class="card-body">
-              <form action="/patient/editMedication/<%= medication.medicationId %>" method="POST">
+              <form action="/patient/editMedication/<%= medication_for_patient.medication_for_patientId %>" method="POST">
 
-                <div class="mb-3">
-                  <label for="medicationName" class="form-label">Medication Name</label>
-                  <input type="text" class="form-control" id="medicationName" name="medicationName" 
-                    value="<%= medication.medicationName %>" required>
-                </div>
-
+                <select name="medicationId" class="form-select mb-3" required>
+                  <option value="">Select Medication</option>
+                  <% medications.forEach(medication => { %>
+                    <option value="<%= medication.medicationId %>">
+                      <%= medication.medicationName %>
+                    </option> 
+                    <% }); %>
+                </select>
                 <div class="mb-3">
                   <label for="dosage" class="form-label">Dosage</label>
-                  <input type="text" class="form-control" id="dosage" name="dosage" 
-                    value="<%= medication.dosage %>" required>
+                  <input type="text" class="form-control" id="dosage" name="dosage"
+                    value="<%= medication_for_patient.dosage %>" required>
                 </div>
 
                 <div class="mb-3">
                   <label for="frequency" class="form-label">Frequency</label>
-                  <input type="text" class="form-control" id="frequency" name="frequency" 
-                    value="<%= medication.frequency %>" required>
+                  <input type="text" class="form-control" id="frequency" name="frequency"
+                    value="<%= medication_for_patient.frequency %>" required>
                 </div>
 
                 <div class="mb-3">
-                  <label for="startDate" class="form-label"></label>
-                  <input type="date" class="form-control" id="startDate" name="startDate" 
-                    value="<%= medication.startDate %>" required>
+                  <label for="startDate" class="form-label">Start Date</label>
+                  <input type="date" class="form-control" id="startDate" name="startDate"
+                    value="<%= medication_for_patient.startDate %>" required>
                 </div>
 
                 <div class="mb-3">
                   <label for="endDate" class="form-label">End Date</label>
-                  <input type="date" class="form-control" id="endDate" name="endDate" 
-                    value="<%= medication.endDate %>" required>
+                  <input type="date" class="form-control" id="endDate" name="endDate"
+                    value="<%= medication_for_patient.endDate %>" >
                 </div>
 
                 <div class="mb-3">
                   <label for="notes" class="form-label">Notes</label>
-                  <input type="text" class="form-control" id="notes" name="notes" 
-                    value="<%= medication.notes %>">
+                  <input type="text" class="form-control" id="notes" name="notes"
+                    value="<%= medication_for_patient.notes %>">
                 </div>
 
                 <div class="d-grid gap-2">
@@ -89,14 +91,14 @@
             </div>
           </div>
 
-        <% } else { %>
+          <% } else { %>
 
-          <div class="alert alert-warning text-center">
-            <h5>No medication found.</h5>
-            <a href="/medications" class="btn btn-secondary mt-3">Back to Medications</a>
-          </div>
+            <div class="alert alert-warning text-center">
+              <h5>No medication found.</h5>
+              <a href="/medications" class="btn btn-secondary mt-3">Back to Medications</a>
+            </div>
 
-        <% } %>
+            <% } %>
 
       </div>
     </div>

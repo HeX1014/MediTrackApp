@@ -349,7 +349,25 @@ app.get(
     checkAuthenticated,
     checkPatientOrStaff,
     (req, res) => {
-        res.render('addMedication', {
+        db.query(
+            'SELECT * FROM medications',
+            (err, results) => {
+                res.render('addMedication', {
+                    user: req.session.user,
+                    medications: results
+                });
+            }
+        );
+    }
+);
+
+// Display Add Medication page for pharmacy staff
+app.get(
+    '/addMedsForStaff',
+    checkAuthenticated,
+    checkStaff,
+    (req, res) => {
+        res.render('addMedsForStaff', {
             user: req.session.user
         });
     }
@@ -380,66 +398,54 @@ app.get(
 );
 
 // Add medication
-// Add medication
 app.post(
     '/addMedication',
     checkAuthenticated,
     checkPatientOrStaff,
     (req, res) => {
+        let { endDate } = req.body;
         const {
-            medicationName,
+            medicationId,
             dosage,
             frequency,
             startDate,
-            endDate,
             notes
         } = req.body;
 
         const userId = req.session.user.id;
         const role = req.session.user.role;
 
-        let medicationType = 'Personal';
-
-        if (
-            role === 'Pharmacy Staff' ||
-            role === 'Staff' ||
-            role === 'staff'
-        ) {
-            medicationType = 'Pharmacy';
-        }
-
-        let finalEndDate = endDate;
-
-        if (!endDate) {
-            finalEndDate = null;
-        }
-
         const sql = `
-            INSERT INTO medications
+            INSERT INTO medication_for_patient
             (
-                userId,
-                medicationName,
+                id,
+                medicationId,
                 dosage,
                 frequency,
                 startDate,
                 endDate,
-                notes,
-                medicationType
+                notes
             )
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+            VALUES (?, ?, ?, ?, ?, ?, ?)
         `;
+
+        console.log(`Adding medication for userId: ${userId}, medicationId: ${medicationId}, dosage: ${dosage}, frequency: ${frequency}, startDate: ${startDate}, endDate: ${endDate}, notes: ${notes}`
+        );
+
+        if (endDate === '') {
+            endDate = null;
+        }
 
         db.query(
             sql,
             [
                 userId,
-                medicationName,
+                medicationId,
                 dosage,
                 frequency,
                 startDate,
-                finalEndDate,
-                notes,
-                medicationType
+                endDate,
+                notes
             ],
             (err) => {
                 if (err) {
@@ -456,6 +462,55 @@ app.post(
                 );
 
                 res.redirect('/medications');
+            }
+        );
+    }
+);
+
+// Add medication for pharmacy staff
+app.post(
+    '/addMedsForStaff',
+    checkAuthenticated,
+    checkStaff,
+    (req, res) => {
+        const {
+            medicationName,
+            expDate,
+            notesForStaff,
+            medicationType
+        } = req.body;
+
+        const sql = `
+            INSERT INTO medications
+            (
+                medicationName,
+                expDate,
+                notesForStaff,
+                medicationType
+            )
+            VALUES (?, ?, ?, ?)
+        `;
+
+        db.query(
+            sql,
+            [
+                medicationName,
+                expDate,
+                notesForStaff,
+                medicationType
+            ],
+            (err) => {
+                if (err) {
+                    console.log(err);
+                    return res.send('Error adding medication');
+                }
+
+                req.flash(
+                    'success',
+                    'Medication added successfully!'
+                );
+
+                res.redirect('/staffMedications');
             }
         );
     }
@@ -677,17 +732,83 @@ app.get(
     }
 );
 
-// View and search medications
+// View and search medications for patients 
 app.get(
     '/medications',
     checkAuthenticated,
-    checkPatientOrStaff,
+    checkPatient,
     (req, res) => {
         const userId = req.session.user.id;
         const role = req.session.user.role;
 
         const search = req.query.search || '';
-        const frequency = req.query.frequency || '';
+        const sort = req.query.sort || 'name';
+
+        let medicationType = 'Personal';
+
+        let orderBy = 'medicationName ASC';
+
+        if (sort === 'date') {
+            orderBy = 'endDate DESC';
+        }
+
+        const sql = `
+            SELECT
+                medication_for_patient.medicationId AS medicationId,
+                medicationName,
+                dosage,
+                frequency,
+                DATE_FORMAT(startDate, '%Y-%m-%d') AS startDate,
+                DATE_FORMAT(endDate, '%Y-%m-%d') AS endDate,
+                notes
+            FROM medication_for_patient
+            INNER JOIN medications ON medication_for_patient.medicationId = medications.medicationId
+            INNER JOIN users ON medication_for_patient.id = users.id
+            WHERE users.id = ?
+            AND medicationName LIKE ?
+            ORDER BY ${orderBy} 
+        `;
+
+        let values = [
+            userId,
+            '%' + search + '%',
+        ];
+
+        db.query(
+            sql,
+            values,
+            (err, results) => {
+                if (err) {
+                    console.log(err);
+
+                    return res.send(
+                        'Error retrieving medications'
+                    );
+                }
+
+                res.render('medications', {
+                    user: req.session.user,
+                    medications: results,
+                    search: search,
+                    sort: sort,
+                    messages: req.flash('success'),
+                    errors: req.flash('error')
+                });
+            }
+        );
+    }
+);
+
+// View and search medications for pharmacy staff
+app.get(
+    '/staffMedications',
+    checkAuthenticated,
+    checkStaff,
+    (req, res) => {
+        const userId = req.session.user.id;
+        const role = req.session.user.role;
+
+        const search = req.query.search || '';
         const sort = req.query.sort || 'name';
 
         let medicationType = 'Personal';
@@ -703,40 +824,23 @@ app.get(
         let orderBy = 'medicationName ASC';
 
         if (sort === 'date') {
-            orderBy = 'startDate DESC';
+            orderBy = 'expDate DESC';
         }
 
         const sql = `
             SELECT
                 medicationId,
                 medicationName,
-                dosage,
-                frequency,
-                DATE_FORMAT(
-                    startDate,
-                    '%Y-%m-%d'
-                ) AS startDate,
-                DATE_FORMAT(
-                    endDate,
-                    '%Y-%m-%d'
-                ) AS endDate,
-                notes,
+                DATE_FORMAT(expDate, '%Y-%m-%d') AS expDate,
+                notesForStaff,
                 medicationType
-            FROM medications
-            WHERE medicationType = ?
-            AND medicationName LIKE ?
-            AND frequency LIKE ?
-            ${medicationType === 'Personal'
-                ? 'AND userId = ?'
-                : ''
-            }
-            ORDER BY ${orderBy}
+                FROM medications
+            WHERE medicationName LIKE ?
+            ORDER BY ${orderBy} 
         `;
 
         let values = [
-            medicationType,
             '%' + search + '%',
-            '%' + frequency + '%'
         ];
 
         if (medicationType === 'Personal') {
@@ -755,11 +859,10 @@ app.get(
                     );
                 }
 
-                res.render('medications', {
+                res.render('staffMedications', {
                     user: req.session.user,
                     medications: results,
                     search: search,
-                    frequency: frequency,
                     sort: sort,
                     messages: req.flash('success'),
                     errors: req.flash('error')
@@ -813,7 +916,19 @@ app.post('/editAppointment/:id', (req, res) => {
 //Edit Medications
 app.get('/patient/editMedication/:id', (req, res) => {
     const medicationId = req.params.id;
-    const sql = 'SELECT * FROM medications WHERE medicationId = ?';
+    const sql = 'SELECT * FROM medication_for_patient WHERE medicationId = ?';
+
+    let medicationList = []; // Initialize an empty array to store medications
+
+    db.query('SELECT * FROM medications', (error, medications) => {
+        if (error) {
+            console.error('Database query error:', error.message);
+            return res.send('Error retrieving medications');
+        }
+
+         medicationList = medications; // Store the medications in a variable
+    })
+
 
     db.query(sql, [medicationId], (error, results) => {
         if (error) {
@@ -822,7 +937,7 @@ app.get('/patient/editMedication/:id', (req, res) => {
         }
 
         if (results.length > 0) {
-            res.render('EditMedication', { medication: results[0] });
+            res.render('EditMedication', { medication_for_patient: results[0], medications: medicationList });
         } else {
             res.send('Medication not found');
         }
@@ -831,16 +946,20 @@ app.get('/patient/editMedication/:id', (req, res) => {
 
 // Send updated information to the server
 app.post('/patient/editMedication/:id', (req, res) => {
-    const medicationId = req.params.id;
-    const { medicationName, dosage, frequency, startDate, endDate, notes } = req.body;
+    const medication_for_patientId = req.params.id;
+    let { endDate } = req.body;
+    const { medicationId, dosage, frequency, startDate, notes } = req.body;
+    if (endDate === '') {
+        endDate = null;
+    }
 
     const sql = `
-        UPDATE medications
-        SET medicationName = ?, dosage = ?, frequency = ?, startDate = ?, endDate = ?, notes = ?
-        WHERE medicationId = ?
+        UPDATE medication_for_patient
+        SET medicationId = ?, dosage = ?, frequency = ?, startDate = ?, endDate = ?, notes = ?
+        WHERE medication_for_patientId = ?
     `;
 
-    db.query(sql, [medicationName, dosage, frequency, startDate, endDate, notes, medicationId], (error) => {
+    db.query(sql, [medicationId, dosage, frequency, startDate, endDate, notes, medication_for_patientId], (error) => {
         if (error) {
             console.error('Database update error:', error.message);
             return res.send('Error updating medication');
@@ -873,22 +992,22 @@ app.get('/staff/editMedication/:id', (req, res) => {
 // Send updated information to the server for pharmacy staff
 app.post('/staff/editMedication/:id', (req, res) => {
     const medicationId = req.params.id;
-    const { medicationName, dosage, frequency, startDate, endDate, notes } = req.body;
+    const { medicationName, expDate, medicationType, notesForStaff } = req.body;
 
     const sql = `
         UPDATE medications
-        SET medicationName = ?, dosage = ?, frequency = ?, startDate = ?, endDate = ?, notes = ?
+        SET medicationName = ?, expDate = ?, medicationType = ?, notesForStaff = ?
         WHERE medicationId = ?
     `;
 
-    db.query(sql, [medicationName, dosage, frequency, startDate, endDate, notes, medicationId], (error) => {
+    db.query(sql, [medicationName, expDate, medicationType, notesForStaff, medicationId], (error) => {
         if (error) {
             console.error('Database update error:', error.message);
             return res.send('Error updating medication');
         }
 
         req.flash('success', 'Medication updated successfully!');
-        res.redirect('/medications');
+        res.redirect('/staffMedications');
     });
 });
 
@@ -943,8 +1062,8 @@ app.get(
 
 const PORT = process.env.PORT || 3000;
 
-    app.listen(PORT, () => {
-        console.log(
-            `Server running on port ${PORT}`
-        );
-    });
+app.listen(PORT, () => {
+    console.log(
+        `Server running on port ${PORT}`
+    );
+});
