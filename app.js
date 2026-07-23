@@ -324,10 +324,24 @@ app.get(
     checkAuthenticated,
     checkAdmin,
     (req, res) => {
-        res.render('admin', {
-            user: req.session.user,
-            messages: req.flash('success'),
-            errors: req.flash('error')
+        const sql = `
+            SELECT id, username, email, role
+            FROM users
+            ORDER BY role, username
+        `;
+
+        db.query(sql, (err, results) => {
+            if (err) {
+                console.log(err);
+                return res.send('Error retrieving user list');
+            }
+
+            res.render('admin', {
+                user: req.session.user,
+                users: results,
+                messages: req.flash('success'),
+                errors: req.flash('error')
+            });
         });
     }
 );
