@@ -709,6 +709,7 @@ app.get(
         const sql = `
             SELECT
                 medicationId,
+                userId,
                 medicationName,
                 dosage,
                 frequency,
