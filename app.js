@@ -4,7 +4,7 @@ const session = require('express-session');
 const flash = require('connect-flash');
 
 const app = express();
- 
+
 // Create MySQL connection
 const db = mysql.createConnection({
     host: 'localhost',
@@ -14,7 +14,7 @@ const db = mysql.createConnection({
     ssl: {
         rejectUnauthorized: false
     }
-}); 
+});
 
 db.connect((err) => {
     if (err) {
@@ -891,10 +891,60 @@ app.post('/staff/editMedication/:id', (req, res) => {
         res.redirect('/medications');
     });
 });
+
+// Admin views staff members and patients
+app.get(
+    '/manageUsers',
+    checkAuthenticated,
+    checkAdmin,
+    (req, res) => {
+        const sql = `
+            SELECT id, username, email, address, contact, role
+            FROM users
+            WHERE role = 'Pharmacy Staff' OR role = 'Staff' OR role = 'staff'
+            ORDER BY username ASC
+        `;
+        const staffSql = `
+            SELECT id, username, email, address, contact, role
+            FROM users
+            WHERE role = 'Pharmacy Staff'
+            ORDER BY username ASC
+        `;
+
+        db.query(staffSql, (staffErr, staffResults) => {
+            if (staffErr) {
+                console.log(staffErr);
+                return res.send('Error retrieving pharmacy staff members');
+            }
+
+            const patientSql = `
+            SELECT id, username, email, address, contact, role
+            FROM users
+            WHERE role = 'Patient' OR role = 'patient'
+            ORDER BY username ASC
+        `;
+
+            db.query(patientSql, (patientErr, patientResults) => {
+                if (patientErr) {
+                    console.log(patientErr);
+                    return res.send('Error retrieving patients');
+                }
+
+                res.render('manageUsers', {
+                    user: req.session.user,
+                    staffMembers: staffResults,
+                    patients: patientResults,
+                });
+            }
+            );
+        });
+    }
+);
+
 const PORT = process.env.PORT || 3000;
 
-app.listen(PORT, () => {
-    console.log(
-        `Server running on port ${PORT}`
-    );
-});
+    app.listen(PORT, () => {
+        console.log(
+            `Server running on port ${PORT}`
+        );
+    });
