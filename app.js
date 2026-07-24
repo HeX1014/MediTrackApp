@@ -311,9 +311,9 @@ app.get(
         }
 
         const userId = req.session.user.id;
-
+        
         const sql = `
-            SELECT deletionRequested
+            SELECT deleteRequest
             FROM users
             WHERE id = ?
         `;
@@ -326,14 +326,11 @@ app.get(
 
             res.render('dashboard', {
                 user: req.session.user,
-                hasPendingDeletionRequest: results.length > 0 && results[0].deletionRequested === 1,
+                hasPendingDeletionRequest: results.length > 0 && results[0].deleteRequest === 1,
                 messages: req.flash('success'),
                 errors: req.flash('error')
             });
         });
-    }
-);
-
 // Admin page
 app.get(
     '/admin',
