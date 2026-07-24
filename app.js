@@ -606,7 +606,7 @@ app.post(
                     'Appointment booked successfully!'
                 );
 
-                res.redirect('/dashboard');
+                res.redirect('/appointments');
             }
         );
     }
