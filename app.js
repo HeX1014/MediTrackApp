@@ -1305,6 +1305,100 @@ app.post(
     }
 );
 
+// Patient submits a request to delete their own account
+app.post(
+    '/account/delete-request',
+    checkAuthenticated,
+    checkPatient,
+    (req, res) => {
+        const userId = req.session.user.id;
+
+        const sql = `
+            UPDATE users
+            SET deletionRequested = 1
+            WHERE id = ?
+            AND deletionRequested = 0
+        `;
+
+        db.query(sql, [userId], (err, result) => {
+            if (err) {
+                console.log(err);
+                return res.send('Error submitting request');
+            }
+
+            if (result.affectedRows === 0) {
+                req.flash('error', 'You already have a pending account deletion request.');
+            } else {
+                req.flash('success', 'Your account deletion request has been submitted for admin review.');
+            }
+
+            res.redirect('/dashboard');
+        });
+    }
+);
+
+// Admin approves a deletion request - actually deletes the account
+app.post(
+    '/admin/deletion-requests/:id/approve',
+    checkAuthenticated,
+    checkAdmin,
+    (req, res) => {
+        const targetUserId = req.params.id;
+
+        if (parseInt(targetUserId) === req.session.user.id) {
+            req.flash('error', 'You cannot delete your own admin account.');
+            return res.redirect('/admin');
+        }
+
+        const sql = `
+            DELETE FROM users
+            WHERE id = ?
+            AND deletionRequested = 1
+        `;
+
+        db.query(sql, [targetUserId], (err, result) => {
+            if (err) {
+                console.log(err);
+                return res.send('Error deleting account');
+            }
+
+            if (result.affectedRows === 0) {
+                req.flash('error', 'Request not found or already handled.');
+            } else {
+                req.flash('success', 'Account deletion request approved and account removed.');
+            }
+
+            res.redirect('/admin');
+        });
+    }
+);
+
+// Admin rejects a deletion request - account is kept
+app.post(
+    '/admin/deletion-requests/:id/reject',
+    checkAuthenticated,
+    checkAdmin,
+    (req, res) => {
+        const targetUserId = req.params.id;
+
+        const sql = `
+            UPDATE users
+            SET deletionRequested = 0
+            WHERE id = ?
+        `;
+
+        db.query(sql, [targetUserId], (err, result) => {
+            if (err) {
+                console.log(err);
+                return res.send('Error rejecting request');
+            }
+
+            req.flash('success', 'Deletion request rejected.');
+            res.redirect('/admin');
+        });
+    }
+);
+
 const PORT = process.env.PORT || 3000;
 
 app.listen(PORT, () => {
