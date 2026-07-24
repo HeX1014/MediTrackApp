@@ -310,10 +310,26 @@ app.get(
             return res.redirect('/admin');
         }
 
-        res.render('dashboard', {
-            user: req.session.user,
-            messages: req.flash('success'),
-            errors: req.flash('error')
+        const userId = req.session.user.id;
+
+        const sql = `
+            SELECT deletionRequested
+            FROM users
+            WHERE id = ?
+        `;
+
+        db.query(sql, [userId], (err, results) => {
+            if (err) {
+                console.log(err);
+                return res.send('Error loading dashboard');
+            }
+
+            res.render('dashboard', {
+                user: req.session.user,
+                hasPendingDeletionRequest: results.length > 0 && results[0].deletionRequested === 1,
+                messages: req.flash('success'),
+                errors: req.flash('error')
+            });
         });
     }
 );
