@@ -1077,6 +1077,199 @@ app.get(
     }
 );
 
+// Delete own medication (removes from medication_for_patient, not the shared catalog)
+app.post(
+    '/medications/:id/delete',
+    checkAuthenticated,
+    checkPatient,
+    (req, res) => {
+        const medicationForPatientId = req.params.id;
+        const userId = req.session.user.id;
+
+        const sql = `
+            DELETE FROM medication_for_patient
+            WHERE medication_for_patientId = ?
+            AND id = ?
+        `;
+
+        db.query(sql, [medicationForPatientId, userId], (err, result) => {
+            if (err) {
+                console.log(err);
+                return res.send('Error deleting medication');
+            }
+
+            if (result.affectedRows === 0) {
+                req.flash('error', 'Medication not found, or you do not have permission to delete it.');
+            } else {
+                req.flash('success', 'Medication removed from your list successfully!');
+            }
+
+            res.redirect('/medications');
+        });
+    }
+);
+
+// Delete own appointment
+app.post(
+    '/appointments/:id/delete',
+    checkAuthenticated,
+    checkPatient,
+    (req, res) => {
+        const appointmentId = req.params.id;
+        const userId = req.session.user.id;
+
+        const sql = `
+            DELETE FROM appointments
+            WHERE appointmentId = ?
+            AND userId = ?
+        `;
+
+        db.query(sql, [appointmentId, userId], (err, result) => {
+            if (err) {
+                console.log(err);
+                return res.send('Error deleting appointment');
+            }
+
+            if (result.affectedRows === 0) {
+                req.flash('error', 'Appointment not found, or you do not have permission to delete it.');
+            } else {
+                req.flash('success', 'Appointment deleted successfully!');
+            }
+
+            res.redirect('/appointments');
+        });
+    }
+);
+
+// Admin deletes a user account
+app.post(
+    '/admin/users/:id/delete',
+    checkAuthenticated,
+    checkAdmin,
+    (req, res) => {
+        const targetUserId = req.params.id;
+
+        if (parseInt(targetUserId) === req.session.user.id) {
+            req.flash('error', 'You cannot delete your own admin account.');
+            return res.redirect('/admin');
+        }
+
+        const sql = `DELETE FROM users WHERE id = ?`;
+
+        db.query(sql, [targetUserId], (err, result) => {
+            if (err) {
+                console.log(err);
+                return res.send('Error deleting user');
+            }
+
+            if (result.affectedRows === 0) {
+                req.flash('error', 'User not found.');
+            } else {
+                req.flash('success', 'User account deleted successfully!');
+            }
+
+            res.redirect('/admin');
+        });
+    }
+);
+
+// My Schedule - personalized combined view
+app.get(
+    '/myschedule',
+    checkAuthenticated,
+    checkPatient,
+    (req, res) => {
+        const userId = req.session.user.id;
+
+        const appointmentsSql = `
+            SELECT
+                appointmentId,
+                clinicHospital,
+                preferredDoctor,
+                DATE_FORMAT(appointmentDate, '%Y-%m-%d') AS appointmentDate,
+                appointmentTime,
+                additionalNotes
+            FROM appointments
+            WHERE userId = ?
+            ORDER BY appointmentDate ASC, appointmentTime ASC
+        `;
+
+        const medicationsSql = `
+            SELECT
+                medication_for_patient.medication_for_patientId,
+                medication_for_patient.medicationId AS medicationId,
+                medicationName,
+                dosage,
+                frequency,
+                DATE_FORMAT(startDate, '%Y-%m-%d') AS startDate,
+                DATE_FORMAT(endDate, '%Y-%m-%d') AS endDate,
+                notes
+            FROM medication_for_patient
+            INNER JOIN medications ON medication_for_patient.medicationId = medications.medicationId
+            WHERE medication_for_patient.id = ?
+            ORDER BY startDate DESC
+        `;
+
+        db.query(appointmentsSql, [userId], (err, appointmentResults) => {
+            if (err) {
+                console.log(err);
+                return res.send('Error retrieving your schedule');
+            }
+
+            db.query(medicationsSql, [userId], (err2, medicationResults) => {
+                if (err2) {
+                    console.log(err2);
+                    return res.send('Error retrieving your schedule');
+                }
+
+                res.render('myschedule', {
+                    user: req.session.user,
+                    appointments: appointmentResults,
+                    medications: medicationResults,
+                    messages: req.flash('success'),
+                    errors: req.flash('error')
+                });
+            });
+        });
+    }
+);
+
+// Delete pharmacy stock medication (staff)
+app.post(
+    '/staffMedications/:id/delete',
+    checkAuthenticated,
+    checkStaff,
+    (req, res) => {
+        const medicationId = req.params.id;
+
+        const sql = `
+            DELETE FROM medications
+            WHERE medicationId = ?
+        `;
+
+        db.query(sql, [medicationId], (err, result) => {
+            if (err) {
+                console.log(err);
+
+                if (err.code === 'ER_ROW_IS_REFERENCED_2' || err.code === 'ER_ROW_IS_REFERENCED') {
+                    req.flash('error', 'This medication is currently prescribed to a patient and cannot be deleted.');
+                    return res.redirect('/staffMedications');
+                }
+
+                return res.send('Error deleting medication');
+            }
+
+            if (result.affectedRows === 0) {
+                req.flash('error', 'Medication not found.');
+            } else {
+                req.flash('success', 'Medication removed from pharmacy stock successfully!');
+            }
+
+            res.redirect('/staffMedications');
+        });
+    }
+);
+
 const PORT = process.env.PORT || 3000;
 
 app.listen(PORT, () => {
