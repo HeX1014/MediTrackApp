@@ -756,6 +756,7 @@ app.get(
         const role = req.session.user.role;
 
         const search = req.query.search || '';
+        const frequency = req.query.frequency || '';
         const sort = req.query.sort || 'name';
 
         let medicationType = 'Personal';
@@ -782,12 +783,14 @@ app.get(
             INNER JOIN users ON medication_for_patient.id = users.id
             WHERE users.id = ?
             AND medicationName LIKE ?
+            AND medication_for_patient.frequency LIKE ?
             ORDER BY ${orderBy} 
         `;
 
         let values = [
             userId,
             '%' + search + '%',
+            '%' + frequency + '%'
         ];
 
         db.query(
@@ -806,6 +809,7 @@ app.get(
                     user: req.session.user,
                     medications: results,
                     search: search,
+                    frequency: frequency,
                     sort: sort,
                     messages: req.flash('success'),
                     errors: req.flash('error')
