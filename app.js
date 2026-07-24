@@ -968,9 +968,8 @@ app.post('/editAppointment/:id', checkAuthenticated, checkPatient, (req, res) =>
 //Edit Medications
 app.get('/patient/editMedication/:id', checkAuthenticated, checkPatient, (req, res) => {
     const medication_for_patientId = req.params.id;
+    const userId = req.session.user.id;
     const sql = 'SELECT * FROM medication_for_patient WHERE medication_for_patientId = ? AND id = ?';
-
-    let medicationList = []; // Initialize an empty array to store medications
 
     db.query('SELECT * FROM medications', (error, medications) => {
         if (error) {
@@ -978,27 +977,25 @@ app.get('/patient/editMedication/:id', checkAuthenticated, checkPatient, (req, r
             return res.send('Error retrieving medications');
         }
 
-         medicationList = medications; // Store the medications in a variable
-    })
+        db.query(sql, [medication_for_patientId, userId], (error, results) => {
+            if (error) {
+                console.error('Database query error:', error.message);
+                return res.send('Error retrieving medication by ID');
+            }
 
-
-    db.query(sql, [medication_for_patientId], (error, results) => {
-        if (error) {
-            console.error('Database query error:', error.message);
-            return res.send('Error retrieving medication by ID');
-        }
-
-        if (results.length > 0) {
-            res.render('EditMedication', { medication_for_patient: results[0], medications: medicationList });
-        } else {
-            res.send('Medication not found');
-        }
+            if (results.length > 0) {
+                res.render('EditMedication', { medication_for_patient: results[0], medications: medications });
+            } else {
+                res.send('Medication not found, or you do not have permission to edit it.');
+            }
+        });
     });
 });
 
 // Send updated information to the server
-app.post('/patient/editMedication/:id', (req, res) => {
+app.post('/patient/editMedication/:id', checkAuthenticated, checkPatient, (req, res) => {
     const medication_for_patientId = req.params.id;
+    const userId = req.session.user.id;
     let { endDate } = req.body;
     const { medicationId, dosage, frequency, startDate, notes } = req.body;
     if (endDate === '') {
@@ -1009,21 +1006,27 @@ app.post('/patient/editMedication/:id', (req, res) => {
         UPDATE medication_for_patient
         SET medicationId = ?, dosage = ?, frequency = ?, startDate = ?, endDate = ?, notes = ?
         WHERE medication_for_patientId = ?
+        AND id = ?
     `;
 
-    db.query(sql, [medicationId, dosage, frequency, startDate, endDate, notes, medication_for_patientId], (error) => {
+    db.query(sql, [medicationId, dosage, frequency, startDate, endDate, notes, medication_for_patientId, userId], (error, result) => {
         if (error) {
             console.error('Database update error:', error.message);
             return res.send('Error updating medication');
         }
 
-        req.flash('success', 'Medication updated successfully!');
+        if (result.affectedRows === 0) {
+            req.flash('error', 'Medication not found, or you do not have permission to edit it.');
+        } else {
+            req.flash('success', 'Medication updated successfully!');
+        }
+
         res.redirect('/medications');
     });
 });
 
 // Edit medication for pharmacy staff
-app.get('/staff/editMedication/:id', (req, res) => {
+app.get('/staff/editMedication/:id', checkAuthenticated, checkStaff, (req, res) => {
     const medicationId = req.params.id;
     const sql = 'SELECT * FROM medications WHERE medicationId = ?';
 
@@ -1041,8 +1044,7 @@ app.get('/staff/editMedication/:id', (req, res) => {
     });
 });
 
-// Send updated information to the server for pharmacy staff
-app.post('/staff/editMedication/:id', (req, res) => {
+app.post('/staff/editMedication/:id', checkAuthenticated, checkStaff, (req, res) => {
     const medicationId = req.params.id;
     const { medicationName, expDate, medicationType, notesForStaff } = req.body;
 
@@ -1350,38 +1352,49 @@ app.post(
             return res.redirect('/admin');
         }
 
-        // Delete dependent records first, to avoid foreign key errors
-        db.query('DELETE FROM medication_for_patient WHERE id = ?', [targetUserId], (err1) => {
-            if (err1) {
-                console.log(err1);
+        db.query('SELECT deleteRequest FROM users WHERE id = ?', [targetUserId], (checkErr, checkResults) => {
+            if (checkErr) {
+                console.log(checkErr);
                 return res.send('Error deleting account');
             }
 
-            db.query('DELETE FROM appointments WHERE userId = ?', [targetUserId], (err2) => {
-                if (err2) {
-                    console.log(err2);
+            if (checkResults.length === 0 || checkResults[0].deleteRequest !== 1) {
+                req.flash('error', 'Request not found or already handled.');
+                return res.redirect('/admin');
+            }
+
+            db.query('DELETE FROM medication_for_patient WHERE id = ?', [targetUserId], (err1) => {
+                if (err1) {
+                    console.log(err1);
                     return res.send('Error deleting account');
                 }
 
-                const sql = `
-                    DELETE FROM users
-                    WHERE id = ?
-                    AND deleteRequest = 1
-                `;
-
-                db.query(sql, [targetUserId], (err3, result) => {
-                    if (err3) {
-                        console.log(err3);
+                db.query('DELETE FROM appointments WHERE userId = ?', [targetUserId], (err2) => {
+                    if (err2) {
+                        console.log(err2);
                         return res.send('Error deleting account');
                     }
 
-                    if (result.affectedRows === 0) {
-                        req.flash('error', 'Request not found or already handled.');
-                    } else {
-                        req.flash('success', 'Account deletion request approved and account removed.');
-                    }
+                    const sql = `
+                        DELETE FROM users
+                        WHERE id = ?
+                        AND deleteRequest = 1
+                    `;
 
-                    res.redirect('/admin');
+                    db.query(sql, [targetUserId], (err3, result) => {
+                        if (err3) {
+                            console.log(err3);
+                            return res.send('Error deleting account');
+                        }
+
+                        if (result.affectedRows === 0) {
+                            req.flash('error', 'Request not found or already handled.');
+                        } else {
+                            req.flash('success', 'Account deletion request approved and account removed.');
+                        }
+
+                        res.redirect('/admin');
+                    });
                 });
             });
         });
