@@ -352,7 +352,7 @@ app.get(
             const requestsSql = `
                 SELECT id, username, email, role
                 FROM users
-                WHERE deletionRequested = 1
+                WHERE deleteRequest = 1
                 ORDER BY username ASC
             `;
 
@@ -1312,9 +1312,9 @@ app.post(
 
         const sql = `
             UPDATE users
-            SET deletionRequested = 1
+            SET deleteRequest = 1
             WHERE id = ?
-            AND deletionRequested = 0
+            AND deleteRequest = 0
         `;
 
         db.query(sql, [userId], (err, result) => {
@@ -1350,7 +1350,7 @@ app.post(
         const sql = `
             DELETE FROM users
             WHERE id = ?
-            AND deletionRequested = 1
+            AND deleteRequest = 1
         `;
 
         db.query(sql, [targetUserId], (err, result) => {
@@ -1380,7 +1380,7 @@ app.post(
 
         const sql = `
             UPDATE users
-            SET deletionRequested = 0
+            SET deleteRequest = 0
             WHERE id = ?
         `;
 
