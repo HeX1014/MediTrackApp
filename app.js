@@ -255,15 +255,16 @@ app.post('/login', (req, res) => {
     }
 
     const sql = `
-        SELECT *
-        FROM users
-        WHERE email = ?
-        AND password = SHA1(?)
-    `;
+    SELECT *
+    FROM users
+    WHERE
+        (email = ? OR contact = ?)
+    AND password = SHA1(?)
+`;
 
     db.query(
         sql,
-        [email, password],
+        [email, email, password],
         (err, results) => {
             if (err) {
                 console.log(err);
