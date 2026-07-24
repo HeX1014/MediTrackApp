@@ -9,7 +9,7 @@ const app = express();
 const db = mysql.createConnection({
     host: 'localhost',
     user: 'root',
-    password: 'RP738964$',
+    password: 'Xuhan014',
     database: 'c237_016_t4ca2',
     ssl: {
         rejectUnauthorized: false
