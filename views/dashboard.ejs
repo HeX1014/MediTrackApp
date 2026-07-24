@@ -81,7 +81,23 @@
                             </a>
 
                             <!-- Pharmacy staff dashboard -->
-                            <% } else if ( user.role==='Pharmacy Staff' || user.role==='Staff' || user.role==='staff' )
+                             <% if (hasPendingDeletionRequest) { %>
+                                <span class="btn btn-secondary disabled">
+                                    Account Deletion Pending Review
+                                </span>
+                                <% } else { %>
+                                    <form
+                                    action="/account/delete-request"
+                                    method="POST"
+                                    class="d-inline"
+                                    onsubmit="return confirm('Are you sure you want to request deletion of your account? An admin will need to approve this before your account is removed.');"
+                                    >
+                                    <button type="submit" class="btn btn-outline-danger">
+                                        Delete My Account
+                                    </button>
+                                </form>
+                                <% } %>
+                                <% } else if ( user.role==='Pharmacy Staff' || user.role==='Staff' || user.role==='staff' )
                                 { %>
 
                                 <h4>Pharmacy Staff Services</h4>
