@@ -331,6 +331,9 @@ app.get(
                 errors: req.flash('error')
             });
         });
+    }
+);
+
 // Admin page
 app.get(
     '/admin',
