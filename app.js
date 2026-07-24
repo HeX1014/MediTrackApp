@@ -340,23 +340,38 @@ app.get(
     checkAuthenticated,
     checkAdmin,
     (req, res) => {
-        const sql = `
+        const usersSql = `
             SELECT id, username, email, role
             FROM users
             ORDER BY role, username
         `;
 
-        db.query(sql, (err, results) => {
+        db.query(usersSql, (err, userResults) => {
             if (err) {
                 console.log(err);
                 return res.send('Error retrieving user list');
             }
 
-            res.render('admin', {
-                user: req.session.user,
-                users: results,
-                messages: req.flash('success'),
-                errors: req.flash('error')
+            const requestsSql = `
+                SELECT id, username, email, role
+                FROM users
+                WHERE deletionRequested = 1
+                ORDER BY username ASC
+            `;
+
+            db.query(requestsSql, (err2, requestResults) => {
+                if (err2) {
+                    console.log(err2);
+                    return res.send('Error retrieving deletion requests');
+                }
+
+                res.render('admin', {
+                    user: req.session.user,
+                    users: userResults,
+                    deletionRequests: requestResults,
+                    messages: req.flash('success'),
+                    errors: req.flash('error')
+                });
             });
         });
     }
