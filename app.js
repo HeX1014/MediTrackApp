@@ -925,11 +925,11 @@ app.get(
 );
 
 // Edit Your Appointments
-app.get('/editAppointment/:id', (req, res) => {
+app.get('/editAppointment/:id', checkAuthenticated, checkPatient, (req, res) => {
     const appointmentId = req.params.id;
-    const sql = 'SELECT * FROM appointments WHERE appointmentId = ?';
+    const sql = 'SELECT * FROM appointments WHERE appointmentId = ? AND userId = ?';
 
-    db.query(sql, [appointmentId], (error, results) => {
+    db.query(sql, [appointmentId, req.session.user.id], (error, results) => {
         if (error) {
             console.error('Database query error:', error.message);
             return res.send('Error retrieving appointment by ID');
@@ -944,17 +944,17 @@ app.get('/editAppointment/:id', (req, res) => {
 });
 
 // Send the updated Information to the server
-app.post('/editAppointment/:id', (req, res) => {
+app.post('/editAppointment/:id', checkAuthenticated, checkPatient, (req, res) => {
     const appointmentId = req.params.id;
     const { clinicHospital, preferredDoctor, appointmentDate, appointmentTime, additionalNotes } = req.body;
 
     const sql = `
         UPDATE appointments
         SET clinicHospital = ?, preferredDoctor = ?, appointmentDate = ?, appointmentTime = ?, additionalNotes = ?
-        WHERE appointmentId = ?
+        WHERE appointmentId = ? AND userId = ?
     `;
 
-    db.query(sql, [clinicHospital, preferredDoctor, appointmentDate, appointmentTime, additionalNotes, appointmentId], (error) => {
+    db.query(sql, [clinicHospital, preferredDoctor, appointmentDate, appointmentTime, additionalNotes, appointmentId, req.session.user.id], (error) => {
         if (error) {
             console.error('Database update error:', error.message);
             return res.send('Error updating appointment');
@@ -966,9 +966,9 @@ app.post('/editAppointment/:id', (req, res) => {
 });
 
 //Edit Medications
-app.get('/patient/editMedication/:id', (req, res) => {
+app.get('/patient/editMedication/:id', checkAuthenticated, checkPatient, (req, res) => {
     const medication_for_patientId = req.params.id;
-    const sql = 'SELECT * FROM medication_for_patient WHERE medication_for_patientId = ?';
+    const sql = 'SELECT * FROM medication_for_patient WHERE medication_for_patientId = ? AND id = ?';
 
     let medicationList = []; // Initialize an empty array to store medications
 
