@@ -19,120 +19,127 @@
             Create a new pharmacy staff account.
         </p>
 
-        <hr>
-
-        <form action="/addStaff" method="POST">
-
-            <div class="mb-3">
-
-                <label class="form-label">
-                    Hospital / Clinic *
-                </label>
-
-                <select name="clinicName" class="form-select" required>
-
-                    <option value="">
-                        Select Hospital / Clinic
-                    </option>
-
-                    <option>
-                        Singapore General Hospital
-                    </option>
-
-                    <option>
-                        Changi General Hospital
-                    </option>
-
-                    <option>
-                        National University Hospital
-                    </option>
-
-                    <option>
-                        Tan Tock Seng Hospital
-                    </option>
-
-                    <option>
-                        Khoo Teck Puat Hospital
-                    </option>
-
-                </select>
-
+        <% if (errors && errors.length> 0) { %>
+            <div class="alert alert-danger">
+                <%= errors[0] %>
             </div>
+            <% } %>
 
-            <div class="mb-3">
+                <hr>
 
-                <label class="form-label">
-                    Staff ID *
-                </label>
+                <form action="/addStaff" method="POST">
 
-                <input type="text" name="staffId" class="form-control" placeholder="Example: S001" required>
+                    <div class="mb-3">
 
-            </div>
+                        <label class="form-label">
+                            Hospital / Clinic *
+                        </label>
 
-            <div class="mb-3">
+                        <select name="clinicName" class="form-select" required>
 
-                <label class="form-label">
-                    Full Name *
-                </label>
+                            <option value="">
+                                Select Hospital / Clinic
+                            </option>
 
-                <input type="text" name="fullName" class="form-control" placeholder="Example: Tan Wei Ming" required>
+                            <option>
+                                Singapore General Hospital
+                            </option>
 
-            </div>
+                            <option>
+                                Changi General Hospital
+                            </option>
 
-            <div class="mb-3">
+                            <option>
+                                National University Hospital
+                            </option>
 
-                <label class="form-label">
-                    Staff Role
-                </label>
+                            <option>
+                                Tan Tock Seng Hospital
+                            </option>
 
-                <input name="role" type="text" class="form-control" value="Pharmacy Staff" disabled>
+                            <option>
+                                Khoo Teck Puat Hospital
+                            </option>
 
-            </div>
+                        </select>
 
-            <div class="mb-3">
+                    </div>
 
-                <label class="form-label">
-                    Phone Number *
-                </label>
+                    <div class="mb-3">
 
-                <input type="text" name="phone" class="form-control" placeholder="Example: 91234567" required>
+                        <label class="form-label">
+                            Staff ID *
+                        </label>
 
-            </div>
+                        <input type="text" name="staffId" class="form-control" placeholder="Example: S001" required>
 
-            <div class="mb-3">
+                    </div>
 
-                <label class="form-label">
-                    Email Address *
-                </label>
+                    <div class="mb-3">
 
-                <input type="email" name="email" class="form-control" placeholder="Example: pharmacist@meditrack.com"
-                    required>
+                        <label class="form-label">
+                            Full Name *
+                        </label>
 
-            </div>
+                        <input type="text" name="fullName" class="form-control" placeholder="Example: Tan Wei Ming"
+                            required>
 
-            <div class="mb-3">
+                    </div>
 
-                <label class="form-label">
-                    Password *
-                </label>
+                    <div class="mb-3">
 
-                <input type="password" name="password" class="form-control" minlength="6" required>
+                        <label class="form-label">
+                            Staff Role
+                        </label>
 
-                <small class="text-muted">
-                    Password must contain at least 6 characters.
-                </small>
+                        <input name="role" type="text" class="form-control" value="Pharmacy Staff" disabled>
 
-            </div>
+                    </div>
 
-            <button type="submit" class="btn btn-dark">
-                Add Pharmacy Staff
-            </button>
+                    <div class="mb-3">
 
-            <a href="/admin" class="btn btn-secondary">
-                Back
-            </a>
+                        <label class="form-label">
+                            Phone Number *
+                        </label>
 
-        </form>
+                        <input type="text" name="phone" class="form-control" placeholder="Example: 91234567" required>
+
+                    </div>
+
+                    <div class="mb-3">
+
+                        <label class="form-label">
+                            Email Address *
+                        </label>
+
+                        <input type="email" name="email" class="form-control"
+                            placeholder="Example: pharmacist@meditrack.com" required>
+
+                    </div>
+
+                    <div class="mb-3">
+
+                        <label class="form-label">
+                            Password *
+                        </label>
+
+                        <input type="password" name="password" class="form-control" minlength="6" required>
+
+                        <small class="text-muted">
+                            Password must contain at least 6 characters.
+                        </small>
+
+                    </div>
+
+                    <button type="submit" class="btn btn-dark">
+                        Add Pharmacy Staff
+                    </button>
+
+                    <a href="/admin" class="btn btn-secondary">
+                        Back
+                    </a>
+
+                </form>
 
     </div>
 

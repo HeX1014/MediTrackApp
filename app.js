@@ -9,7 +9,7 @@ const app = express();
 const db = mysql.createConnection({
     host: 'localhost',
     user: 'root',
-    password: 'Xuhan014',
+    password: 'RP738964$',
     database: 'c237_016_t4ca2',
     ssl: {
         rejectUnauthorized: false
@@ -311,7 +311,7 @@ app.get(
         }
 
         const userId = req.session.user.id;
-        
+
         const sql = `
             SELECT deleteRequest
             FROM users
@@ -437,7 +437,8 @@ app.get(
     checkAdmin,
     (req, res) => {
         res.render('addStaff', {
-            user: req.session.user
+            user: req.session.user,
+            errors: req.flash('error')
         });
     }
 );
@@ -649,6 +650,7 @@ app.post(
     checkAuthenticated,
     checkAdmin,
     (req, res) => {
+
         const {
             clinicName,
             staffId,
@@ -666,17 +668,8 @@ app.post(
             !email ||
             !password
         ) {
-            return res.send(
-                'All fields are required.'
-            );
+            return res.send('All fields are required.');
         }
-
-        /*
-            The existing users table does not have
-            clinicName or staffId columns.
-
-            Store them in the address column instead.
-        */
 
         const address =
             clinicName +
@@ -685,46 +678,74 @@ app.post(
 
         const role = 'Pharmacy Staff';
 
-        const sql = `
-            INSERT INTO users
-            (
-                username,
-                email,
-                password,
-                address,
-                contact,
-                role
-            )
-            VALUES (?, ?, SHA1(?), ?, ?, ?)
+        const checkEmailSql = `
+            SELECT *
+            FROM users
+            WHERE email = ?
         `;
 
         db.query(
-            sql,
-            [
-                fullName,
-                email,
-                password,
-                address,
-                phone,
-                role
-            ],
-            (err) => {
+            checkEmailSql,
+            [email],
+            (err, results) => {
+
                 if (err) {
                     console.log(err);
-
-                    return res.send(
-                        'Error adding staff'
-                    );
+                    return res.send('Database Error');
                 }
 
-                req.flash(
-                    'success',
-                    'Pharmacy staff added successfully!'
+                if (results.length > 0) {
+
+                    req.flash(
+                        'error',
+                        'Email already exists.'
+                    );
+
+                    return res.redirect('/addStaff');
+                }
+
+                const sql = `
+                    INSERT INTO users
+                    (
+                        username,
+                        email,
+                        password,
+                        address,
+                        contact,
+                        role
+                    )
+                    VALUES (?, ?, SHA1(?), ?, ?, ?)
+                `;
+
+                db.query(
+                    sql,
+                    [
+                        fullName,
+                        email,
+                        password,
+                        address,
+                        phone,
+                        role
+                    ],
+                    (err) => {
+
+                        if (err) {
+                            console.log(err);
+                            return res.send('Error adding staff');
+                        }
+
+                        req.flash(
+                            'success',
+                            'Pharmacy staff added successfully!'
+                        );
+
+                        res.redirect('/admin');
+                    }
                 );
 
-                res.redirect('/admin');
             }
         );
+
     }
 );
 
