@@ -98,12 +98,12 @@
                         </td>
                         <td><%= medications[i].notes %></td>
                         <td>
-                            <a href="/patient/editMedication/<%= medications[i].medicationId %>" class="btn btn-warning">Edit</a>
+                            <a href="/patient/editMedication/<%= medications[i].medication_for_patientId %>" class="btn btn-warning">Edit</a>
                             <form
-                                action="/medications/<%= medications[i].medicationId %>/delete"
-                                method="POST"
-                                class="d-inline"
-                                onsubmit="return confirm('Are you sure you want to delete this medication? This cannot be undone.');"
+                            action="/medications/<%= medications[i].medication_for_patientId %>/delete"
+                            method="POST"
+                            class="d-inline"
+                            onsubmit="return confirm('Are you sure you want to delete this medication? This cannot be undone.');"
                             >
                                 <button type="submit" class="btn btn-danger">Delete</button>
                             </form>
