@@ -107,9 +107,58 @@
                                                     <% } %>
                                                 </td>
                                             </tr>
-                                            <% } %>
+                                        <% } %>
                                         </tbody>
                                     </table>
+                                    <% } %>
+
+                                    <hr>
+
+                                    <h4>Pending Account Deletion Requests</h4>
+
+                                    <p>Review and action requests submitted by patients to delete their own accounts.</p>
+
+                                    <% if (deletionRequests.length === 0) { %>
+                                        <div class="alert alert-info">No pending deletion requests.</div>
+                                    <% } else { %>
+                                        <table class="table table-bordered table-hover">
+                                            <thead class="table-light">
+                                                <tr>
+                                                    <th>Username</th>
+                                                    <th>Email</th>
+                                                    <th>Role</th>
+                                                    <th>Actions</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                <% for (let i = 0; i < deletionRequests.length; i++) { %>
+                                                    <tr>
+                                                        <td><%= deletionRequests[i].username %></td>
+                                                        <td><%= deletionRequests[i].email %></td>
+                                                        <td><%= deletionRequests[i].role %></td>
+                                                        <td>
+                                                            <form
+                                                                action="/admin/deletion-requests/<%= deletionRequests[i].id %>/approve"
+                                                                method="POST"
+                                                                class="d-inline"
+                                                                onsubmit="return confirm('Approve this request? The account will be permanently deleted.');"
+                                                            >
+                                                                <button type="submit" class="btn btn-danger btn-sm">Approve & Delete</button>
+                                                            </form>
+
+                                                            <form
+                                                                action="/admin/deletion-requests/<%= deletionRequests[i].id %>/reject"
+                                                                method="POST"
+                                                                class="d-inline"
+                                                                onsubmit="return confirm('Reject this deletion request?');"
+                                                            >
+                                                                <button type="submit" class="btn btn-secondary btn-sm">Reject</button>
+                                                            </form>
+                                                        </td>
+                                                    </tr>
+                                                <% } %>
+                                            </tbody>
+                                        </table>
                                     <% } %>
                                 </div>
                             </body>
