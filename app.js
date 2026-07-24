@@ -1350,25 +1350,40 @@ app.post(
             return res.redirect('/admin');
         }
 
-        const sql = `
-            DELETE FROM users
-            WHERE id = ?
-            AND deleteRequest = 1
-        `;
-
-        db.query(sql, [targetUserId], (err, result) => {
-            if (err) {
-                console.log(err);
+        // Delete dependent records first, to avoid foreign key errors
+        db.query('DELETE FROM medication_for_patient WHERE id = ?', [targetUserId], (err1) => {
+            if (err1) {
+                console.log(err1);
                 return res.send('Error deleting account');
             }
 
-            if (result.affectedRows === 0) {
-                req.flash('error', 'Request not found or already handled.');
-            } else {
-                req.flash('success', 'Account deletion request approved and account removed.');
-            }
+            db.query('DELETE FROM appointments WHERE userId = ?', [targetUserId], (err2) => {
+                if (err2) {
+                    console.log(err2);
+                    return res.send('Error deleting account');
+                }
 
-            res.redirect('/admin');
+                const sql = `
+                    DELETE FROM users
+                    WHERE id = ?
+                    AND deleteRequest = 1
+                `;
+
+                db.query(sql, [targetUserId], (err3, result) => {
+                    if (err3) {
+                        console.log(err3);
+                        return res.send('Error deleting account');
+                    }
+
+                    if (result.affectedRows === 0) {
+                        req.flash('error', 'Request not found or already handled.');
+                    } else {
+                        req.flash('success', 'Account deletion request approved and account removed.');
+                    }
+
+                    res.redirect('/admin');
+                });
+            });
         });
     }
 );
